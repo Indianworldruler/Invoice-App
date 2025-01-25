@@ -1,60 +1,71 @@
-import React, { useState } from 'react';
-import FraudDetector from './advanced-fraud-detection.js';
-import { InvoiceParser } from './invoice-parser-enhanced.js';
+import React, { useState } from "react";
+import ReactDOM from "react-dom";
+import { Chart, registerables } from "chart.js";
+Chart.register(...registerables);
 
-const FraudDetectionApp = () => {
-    const [fraudResults, setFraudResults] = useState(null);
-    const [invoiceData, setInvoiceData] = useState(null);
-    const fraudDetector = new FraudDetector();
+const App = () => {
+  const [file, setFile] = useState(null);
+  const [results, setResults] = useState(null);
 
-    const handleFileUpload = async (event) => {
-        const file = event.target.files[0];
-        
-        try {
-            // Parse invoice
-            const parsedInvoice = await InvoiceParser.parse(file);
-            setInvoiceData(parsedInvoice);
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
 
-            // Detect fraud
-            const fraudAnalysis = await fraudDetector.detectFraud(parsedInvoice);
-            setFraudResults(fraudAnalysis);
-        } catch (error) {
-            console.error('Fraud detection error:', error);
-        }
-    };
+  const handleUpload = async () => {
+    if (!file) {
+      alert("Please upload a file.");
+      return;
+    }
 
-    return (
-        <div className="container">
-            <h1>Advanced Invoice Fraud Detector</h1>
-            
-            <input 
-                type="file" 
-                onChange={handleFileUpload}
-                accept=".pdf,.xls,.xlsx,.doc,.docx"
-            />
+    const formData = new FormData();
+    formData.append("invoice", file);
 
-            {invoiceData && (
-                <div className="invoice-details">
-                    <h2>Invoice Details</h2>
-                    <pre>{JSON.stringify(invoiceData, null, 2)}</pre>
-                </div>
-            )}
+    try {
+      const response = await axios.post("http://localhost:5000/api/analyze", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setResults(response.data);
+    } catch (error) {
+      console.error("Error analyzing file:", error);
+      alert("Failed to analyze the file.");
+    }
+  };
 
-            {fraudResults && (
-                <div className={`fraud-results ${fraudResults.isFraudulent ? 'alert-danger' : 'alert-success'}`}>
-                    <h2>Fraud Analysis</h2>
-                    <p>Fraudulent: {fraudResults.isFraudulent ? 'Yes' : 'No'}</p>
-                    <p>Fraud Score: {fraudResults.fraudScore}</p>
-                    
-                    {fraudResults.details.map((detail, index) => (
-                        <div key={index} className="fraud-detail">
-                            {detail.reason}
-                        </div>
-                    ))}
-                </div>
-            )}
+  const renderChart = () => {
+    if (results) {
+      const ctx = document.getElementById("fraudChart").getContext("2d");
+      new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: Object.keys(results),
+          datasets: [
+            {
+              data: Object.values(results),
+              backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF"],
+            },
+          ],
+        },
+      });
+    }
+  };
+
+  return (
+    <div className="container">
+      <div className="card p-4">
+        <h3>Fraud Detection App</h3>
+        <input type="file" className="form-control mt-3" onChange={handleFileChange} />
+        <button className="btn btn-primary mt-3" onClick={handleUpload}>
+          Analyze Invoice
+        </button>
+      </div>
+      {results && (
+        <div id="chartContainer">
+          <canvas id="fraudChart"></canvas>
+          {renderChart()}
         </div>
-    );
+      )}
+    </div>
+  );
 };
 
-export default FraudDetectionApp;
+ReactDOM.render(<App />, document.getElementById("root"));
