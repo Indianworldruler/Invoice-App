@@ -1,0 +1,44 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f6f9;
+}
+
+.invoice-upload-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.fraud-detection-results {
+    margin-top: 20px;
+}
+
+.fraud-alert {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.safe-invoice {
+    color: #28a745;
+}
+
+.chart-container {
+    max-height: 400px;
+    margin-top: 20px;
+}
+
+.file-upload-input {
+    display: none;
+}
+
+.file-upload-label {
+    cursor: pointer;
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+}
